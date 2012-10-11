@@ -2,5 +2,7 @@ from distutils.core import setup
 
 setup(
     name='sshrun',
-    license='LICENSE.txt'
+    version='0.1',
+    packages=['sshrun',],
+    license='MIT license'
 )
