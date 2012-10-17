@@ -30,7 +30,7 @@ def run(args, timeout=60, host=None, split=False, word_split=False,
         line_split=False,
         ignore_failure=False, verify=True,
         cwd=None, user=None, env={}, shell=False, stderr=False,  echo=False, 
-        verbose=True, announce_interval = 20, wait=True,
+        verbose=False, announce_interval = 20, wait=True,
         stdin_push='', output_callback=None, 
         error_callback=None):
     """Run command with args, or raise SubprocessTimeout after timeout seconds.
@@ -82,9 +82,8 @@ def run(args, timeout=60, host=None, split=False, word_split=False,
         shell = False
         args = ['ssh', '-oPasswordAuthentication=no', '-l' + (user if user else 'root'), host] + shell_prefixes + spargs
         description += ' on '+host
-    if verbose or 1:
+    if verbose:
         print 'RUN:', repr(args)
-    print 'cwd', cwd
     process = Popen(args, stdout=PIPE, stderr=PIPE, stdin=PIPE, shell=shell,
                     env=env, cwd=cwd)
 
@@ -116,7 +115,8 @@ def run(args, timeout=60, host=None, split=False, word_split=False,
             try:
                 kill(pid, SIGKILL)
             except OSError:
-                print 'WARNING: unable to kill subprocess', pid
+                if verbose:
+                    print 'WARNING: unable to kill subprocess', pid
         raise TimeoutError(description, timeout, delay)
 
     if not wait:
@@ -261,24 +261,27 @@ def specify(**options):
     return subrun
 
 
-def verify_connection(host, user, timeout=60):
+def verify_connection(host, user, timeout=60, verbose=False):
     """Verify that we can connect to host as user"""
     def go():
         run(['true'], verify=False, host=host, user=user, timeout=5)
     try:
         retry(go, 'run true on '+host, timeout=timeout)
     except Exception,exc:
-        print 'RUN: first stage verify failed with', exc
+        if verbose:
+            print 'RUN: first stage verify failed with', exc
     else:
         return
     
     for line in run(['ps', 'uaxxwww'], split=True):
         if 'ssh' in line and host in line:
-            print 'RUN: killing ssh process', line
+            if verbose:
+                print 'RUN: killing ssh process', line
             try:
                 kill(int(line[1]), SIGKILL)
             except OSError:
-                print 'NOTE: unable to kill', line[1]
+                if verbose:
+                    print 'NOTE: unable to kill', line[1]
         sfile = '/tmp/root@'+host+':22'
         if exists(sfile):
             try:
@@ -288,7 +291,8 @@ def verify_connection(host, user, timeout=60):
     try:
         go()
     except Exception, exc:
-        print 'RUN: second stage verify failed with', repr(exc)
+        if verbose:
+            print 'RUN: second stage verify failed with', repr(exc)
         raise UnableToRunCommandsOnHost(host, user, exc)
 
 def maketempfile(host=None, postfix=''):
