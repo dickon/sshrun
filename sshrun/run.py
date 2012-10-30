@@ -225,6 +225,7 @@ def readfile(filename, host=None, user='root', **args):
         return file(filename, 'rb').read()
     handle, temp = mkstemp()
     try:
+        verify_connection(host, user, timeout=10)
         run(['scp', user+'@'+host+':'+filename, temp], env=None, **args)
         return file(temp, 'rb').read()
     finally:
