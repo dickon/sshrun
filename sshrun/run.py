@@ -252,16 +252,6 @@ def writefile(filename, content, host=None, user='root',
         unlink(temp)
     run(['chmod', 'a+rx', filename], host=host, **args)
         
-def specify(**options):
-    """Return a version of run with options set"""
-    def subrun(args, **loptions):
-        """Run args with options"""
-        for key, value in options.items():
-            loptions.setdefault(key, value)
-        return run(args, **loptions)
-    return subrun
-
-
 def verify_connection(host, user, timeout=60, verbose=False):
     """Verify that we can connect to host as user"""
     def go():
@@ -305,3 +295,20 @@ def maketempdirectory(host=None, postfix=''):
     """Make temporary file on host"""
     return run(['mktemp', '-d', '/tmp/tmpXXXXXXXXXX' + postfix],
                host=host).rstrip('\n')
+
+FUNCTIONS = [run, statcheck, isfile, islink, isdir, readfile, writefile, 
+             verify_connection,  maketempfile, maketempdirectory]
+
+def specify(**options):
+    """Return a dictionary mapping function names 
+    to versions of the functions in this module with defaults changed
+    as specified"""
+    def subrun(function):
+        def returnfn(*argl, **argd):
+            """Run args with options"""
+            print 'HEADLINE: setting', options, 'for', function.__name__
+            for key in options:
+                argd.setdefault(key, options[key])
+            return function(*argl, **argd)
+        return returnfn
+    return dict( [(x.__name__, subrun(x)) for x in FUNCTIONS])
