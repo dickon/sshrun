@@ -6,8 +6,20 @@ class TimeoutStillFalseError(TimeoutError):
     """A function is still returning false after too long"""
 
 def retry(fn, description, pace=1.0, timeout=60.0, 
-          catch=[Exception], propagate=[], verbose=False):
-    """Run fn, retrying in the event of a exceptions on the catch
+          retry_on_false = False, catch=[], propagate=[], verbose=False):
+    """Keeping running function until success.
+
+    Arguments:
+
+        fn: the function we wish to run
+        retry_on_falsish: if true, retry if we get a falsish result from fn
+        catch: exceptions types to ignore and retry
+        pace: number of seconds to pace out attempts to call fn
+        timeout: give up after this number of seconds
+        fail_callback: function to call on failure
+
+
+    Run fn, retrying in the event of a exceptions on the catch
     list for up to timeout seconds, waiting pace seconds between attempts"""
     start_time = time()
     count = 0
@@ -18,10 +30,13 @@ def retry(fn, description, pace=1.0, timeout=60.0,
             print 'RETRY:', description, 'iteration', count, 'used', delta_t,
             print 'timeout', timeout
         try:
-            result = fn()
+            elapsed = time() - start-time
+            with time_limit(timeout-elpased, 'run '+description):
+                result = fn()
             if verbose:
-                print 'RETRY:', description, 'iteration', count, 'succeeded'
-            return result
+                print 'RETRY:', description, 'iteration', count, 'finished'
+            if catch is not None or result:
+                return result
         except Exception, exc:
             matches = [x for x in catch if isinstance(exc, x)]
             propagates = [x for x in propagate if isinstance(exc, x)]
@@ -66,8 +81,9 @@ def retry_until_true(fn, description='seeking truth', pace=1.0, timeout=60.0,
         if verbose:
             print 'RETRY:', description, 'iteration', count, 
             print 'timeout', timeout
+        delta1_t = time() - start_time
 
-        with time_limit(timeout-delta_t, 'run '+description):
+        with time_limit(timeout-delta1_t, 'run '+description):
             result = fn()
         delta_t = time() - start_time
         if verbose:
