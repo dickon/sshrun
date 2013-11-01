@@ -286,15 +286,15 @@ def verify_connection(host, user, timeout=60, verbose=False):
             print 'RUN: second stage verify failed with', repr(exc)
         raise UnableToRunCommandsOnHost(host, user, exc)
 
-def maketempfile(host=None, postfix=''):
+def maketempfile(host=None, postfix='', **kd):
     """Make temporary file on host"""
     return run(['mktemp', '/tmp/tmpXXXXXXXXXX' + postfix],
-               host=host).rstrip('\n')
+               host=host, **kd).rstrip('\n')
 
-def maketempdirectory(host=None, postfix=''):
+def maketempdirectory(host=None, postfix='', **kd):
     """Make temporary file on host"""
     return run(['mktemp', '-d', '/tmp/tmpXXXXXXXXXX' + postfix],
-               host=host).rstrip('\n')
+               host=host, **kd).rstrip('\n')
 
 FUNCTIONS = [run, statcheck, isfile, islink, isdir, readfile, writefile, 
              verify_connection,  maketempfile, maketempdirectory]
