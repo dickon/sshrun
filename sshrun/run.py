@@ -226,7 +226,9 @@ def readfile(filename, host=None, user='root', **args):
     handle, temp = mkstemp()
     try:
         verify_connection(host, user, timeout=10)
-        run(['scp', user+'@'+host+':'+filename, temp], env=None, **args)
+        a2 = dict(args)
+        a2.pop('cwd', None)
+        run(['scp', user+'@'+host+':'+filename, temp], env=None, **a2)
         return file(temp, 'rb').read()
     finally:
         unlink(temp)
