@@ -135,8 +135,9 @@ def run(args, timeout=60, host=None, split=False, word_split=False,
         while fd2file:
             if time() > announce:
                 announce = time() + announce_interval
-                print 'NOTE: waiting', time() - start, 'of', timeout, \
-                    'seconds for', ' '.join(args)
+                if verbose:
+                    print 'NOTE: waiting', time() - start, 'of', timeout, \
+                        'seconds for', ' '.join(args)
             try:
                 ready = poller.poll(20)
             except error, eparam:
@@ -254,6 +255,10 @@ def writefile(filename, content, host=None, user='root',
         unlink(temp)
     run(['chmod', 'a+rx', filename], host=host, **args)
         
+def filesize(filename, **args):
+    """Return file size as an integer number of bytes"""
+    return int(run(['stat', '-c', '%s', filename], **args))
+
 def verify_connection(host, user, timeout=60, verbose=False):
     """Verify that we can connect to host as user"""
     def go():
@@ -298,8 +303,25 @@ def maketempdirectory(host=None, postfix='', **kd):
     return run(['mktemp', '-d', '/tmp/tmp'+postfix+'XXXXXXXXXX'],
                host=host, **kd).rstrip('\n')
 
-FUNCTIONS = [run, statcheck, isfile, islink, isdir, readfile, writefile, 
-             verify_connection,  maketempfile, maketempdirectory]
+def transienttempfile(**kd):
+    """Return a temporary file in a context manager, which will be deleted
+    when the context manager exits. For example:
+
+    with transienttempfile(host='server') as path:
+        run(['command', '-o', path], host='server')
+    """
+    class Wrapper:
+        def __enter__(self):
+            self.path = maketempfile(**kd)
+            return self.path
+        def __exit__(self, *_):
+            a2 = dict(kd)
+            a2.pop('postfix', None)
+            run(['rm', self.path], **a2)
+    return Wrapper()        
+    
+FUNCTIONS = [run, statcheck, isfile, islink, isdir, readfile, writefile,  filesize,
+             verify_connection,  maketempfile, maketempdirectory, transienttempfile]
 
 def specify(**options):
     """Return a dictionary mapping function names 
