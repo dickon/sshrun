@@ -68,7 +68,7 @@ def run(args, timeout=60, host=None, split=False, word_split=False,
     """
     description = ' '.join(args)
     if host and verify:
-        verify_connection(host, user, timeout=timeout)
+        verify_connection(host, user, timeout=timeout, verbose=verbose)
     
     spargs = space_escape(args)    
     if host:
