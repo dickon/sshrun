@@ -290,12 +290,12 @@ def verify_connection(host, user, timeout=60, verbose=False):
 
 def maketempfile(host=None, postfix='', **kd):
     """Make temporary file on host"""
-    return run(['mktemp', '/tmp/tmpXXXXXXXXXX' + postfix],
+    return run(['mktemp', '/tmp/tmp'+postfix+'XXXXXXXXXX'],
                host=host, **kd).rstrip('\n')
 
 def maketempdirectory(host=None, postfix='', **kd):
     """Make temporary file on host"""
-    return run(['mktemp', '-d', '/tmp/tmpXXXXXXXXXX' + postfix],
+    return run(['mktemp', '-d', '/tmp/tmp'+postfix+'XXXXXXXXXX'],
                host=host, **kd).rstrip('\n')
 
 FUNCTIONS = [run, statcheck, isfile, islink, isdir, readfile, writefile, 
