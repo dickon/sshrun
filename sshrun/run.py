@@ -306,7 +306,6 @@ def specify(**options):
     def subrun(function):
         def returnfn(*argl, **argd):
             """Run args with options"""
-            print 'HEADLINE: setting', options, 'for', function.__name__
             for key in options:
                 argd.setdefault(key, options[key])
             return function(*argl, **argd)
