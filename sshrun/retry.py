@@ -1,6 +1,6 @@
 """Retry functions"""
 from time import time, sleep
-from sshrun.time_limit import TimeoutError
+from sshrun.time_limit import TimeoutError, time_limit
 
 class TimeoutStillFalseError(TimeoutError):
     """A function is still returning false after too long"""
@@ -30,8 +30,8 @@ def retry(fn, description, pace=1.0, timeout=60.0,
             print 'RETRY:', description, 'iteration', count, 'used', delta_t,
             print 'timeout', timeout
         try:
-            elapsed = time() - start-time
-            with time_limit(timeout-elpased, 'run '+description):
+            elapsed = time() - start_time
+            with time_limit(timeout-elapsed, 'run '+description):
                 result = fn()
             if verbose:
                 print 'RETRY:', description, 'iteration', count, 'finished'
